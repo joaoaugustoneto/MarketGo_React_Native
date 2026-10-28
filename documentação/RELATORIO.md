@@ -351,3 +351,44 @@ O `pnpm` v10 possui uma política de segurança contra ataques de cadeia de supr
 #### Resultado
 
 As dependências foram validadas e o processo de compilação do APK Android prosseguiu normalmente nos servidores do Expo.
+
+---
+
+### 11. Erro de Inicialização Web ("Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL")
+
+#### Descrição do Erro
+
+Ao inicializar o aplicativo no navegador ou via terminal com `npx expo start -c`, o console exibiu o seguinte erro em tempo de execução:
+
+```text
+Web ERROR [Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.]
+  at validateSupabaseUrl (node_modules/@supabase/supabase-js/dist/index.mjs:400)
+  at createClient (src/lib/supabase.ts:15)
+```
+
+Além disso, o Metro Bundler foi alocado na porta alternativa `8082` devido à porta padrão `8081` estar ocupada por outro processo concorrente.
+
+#### Análise Técnica
+
+1. **Digitação no `.env`:** O arquivo `.env` continha um caractere extra no início do protocolo (`hhttps://xwkjusugsmpuukutqjcr.supabase.co`). Como o validador interno do `@supabase/supabase-js` utiliza a expressão regular `/^https?:\/\//i`, o prefixo `hhttps` foi rejeitado como protocolo inválido.
+2. **Concorrência de Terminais:** Havia mais de uma instância do servidor Metro aberta simultaneamente (uma na porta 8081 e outra na porta 8082), gerando concorrência de leitura das variáveis em cache.
+
+#### Como a Solução foi Implementada
+
+1. A URL no arquivo `.env` foi corrigida para o formato correto:
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=https://xwkjusugsmpuukutqjcr.supabase.co
+   ```
+2. Em `src/lib/supabase.ts`, foi adicionada uma camada de **higienização defensiva** antes de instanciar o cliente do Supabase, normalizando automaticamente prefixos duplicados acidentais (como `hhttps://`) e removendo sufixos indevidos (como `/rest/v1/` e barras finais):
+   ```ts
+   const url = rawUrl
+     .trim()
+     .replace(/^h+ttps?:\/\//i, (m) => (m.toLowerCase().includes('http:') ? 'http://' : 'https://'))
+     .replace(/\/rest\/v1\/?$/i, '')
+     .replace(/\/+$/, '');
+   ```
+3. As instâncias órfãs do Node.js foram encerradas para liberar a porta padrão `8081`.
+
+#### Resultado
+
+O cliente Supabase inicializa com sucesso tanto no ambiente mobile quanto no ambiente Web sem erros de validação de URL.
