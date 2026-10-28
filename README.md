@@ -4,10 +4,10 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ---
 
-## 📱 Capturas de Tela
+## Capturas de Tela
 
 <!-- Espaço reservado para as capturas de tela do aplicativo -->
-| 🏪 Lojas e Catálogo | 🛒 Cardápio e Itens | 💳 Carrinho e Checkout | 📦 Acompanhamento e Avaliação |
+|  Lojas e Catálogo |  Cardápio e Itens |  Carrinho e Checkout |  Acompanhamento e Avaliação |
 | :---: | :---: | :---: | :---: |
 | ![Lojas](docs/lojas.png) | ![Cardápio](docs/cardapio.png) | ![Carrinho](docs/carrinho.png) | ![Acompanhamento](docs/pedido.png) |
 
@@ -19,7 +19,7 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ---
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 - **Autenticação Segura:** Cadastro, login e sessão persistente gerenciados pelo Supabase Auth.
 - **Catálogo Inteligente:** Lista de lojas com busca em tempo real, filtro rápido por categoria (chips) e indicador visual de loja aberta/fechada.
@@ -34,7 +34,7 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ---
 
-## 🛠️ Tecnologias
+##  Tecnologias
 
 - **Mobile Framework:** [React Native](https://reactnative.dev/) com [Expo](https://expo.dev/) (SDK 52)
 - **Navegação:** [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
@@ -48,7 +48,7 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ---
 
-## 🚀 Como Executar
+##  Como Executar
 
 ### Pré-requisitos
 - Node.js 20+ ou 22+
@@ -84,7 +84,7 @@ Escaneie o QR Code exibido no terminal utilizando o aplicativo **Expo Go** no An
 
 ---
 
-## 🛡️ Segurança em Uma Linha
+##  Segurança em Uma Linha
 
 > O app **não possui permissão direta de escrita** nas tabelas `orders` e `order_items`: não existe política de `insert`, `update` ou `delete` aberta para o cliente. Toda escrita ocorre por funções transacionais seguras (`create_order`, `advance_order`, `cancel_order`) que validam regras de negócio, calculam totais com preços do banco e controlam a máquina de estados do status. Além disso, a tabela de avaliações (`order_reviews`) valida via RLS que apenas o dono do pedido pode avaliá-lo e somente se o pedido estiver com status `delivered`.
 
