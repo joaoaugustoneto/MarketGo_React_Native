@@ -1,15 +1,24 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { Input } from '@/components/Input';
 import { OrderTimeline } from '@/components/OrderTimeline';
 import { Screen } from '@/components/Screen';
+import { StarRating } from '@/components/StarRating';
 import { ErrorState, LoadingView } from '@/components/StateViews';
 import { PAYMENT_METHODS } from '@/constants/catalog';
 import { useCart } from '@/context/CartContext';
-import { useAdvanceOrder, useCancelOrder, useOrder } from '@/hooks/useOrders';
+import {
+  useAdvanceOrder,
+  useCancelOrder,
+  useCreateOrderReview,
+  useOrder,
+  useOrderReview,
+} from '@/hooks/useOrders';
 import { useReorder } from '@/hooks/useReorder';
-import { colors, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 import { formatDateTime } from '@/utils/date';
 import { friendlyError } from '@/utils/errors';
 import { formatMoney } from '@/utils/money';
@@ -20,6 +29,12 @@ export default function OrderScreen() {
   const router = useRouter();
   const { setCart } = useCart();
   const { data: order, isLoading, isError, error, refetch } = useOrder(id);
+  const { data: review } = useOrderReview(id);
+  const createReview = useCreateOrderReview();
+
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+
   const advance = useAdvanceOrder();
   const cancel = useCancelOrder();
   const reorder = useReorder();
@@ -69,6 +84,20 @@ export default function OrderScreen() {
     });
   }
 
+  function handleSendReview() {
+    if (!order) return;
+    createReview.mutate(
+      { orderId: order.id, rating, comment },
+      {
+        onSuccess: () => {
+          Alert.alert('Avaliação enviada', 'Obrigado por avaliar este pedido!');
+          setComment('');
+        },
+        onError: (e) => Alert.alert('Erro ao avaliar', friendlyError(e)),
+      },
+    );
+  }
+
   return (
     <Screen scroll edges={['bottom', 'left', 'right']}>
       <Text style={styles.store}>{order.store_name}</Text>
@@ -101,14 +130,55 @@ export default function OrderScreen() {
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Entrega e pagamento</Text>
         <Text style={styles.detail}>
-          {order.address_street}, {order.address_number} · {order.address_neighborhood}
-          {order.address_complement ? ` · ${order.address_complement}` : ''}
+          {order.address_street}, {order.address_number} – {order.address_neighborhood}
+          {order.address_complement ? ` – ${order.address_complement}` : ''}
         </Text>
         <Text style={styles.detail}>
           {paymentLabel}
-          {order.change_for ? ` · troco para ${formatMoney(order.change_for)}` : ''}
+          {order.change_for ? ` – troco para ${formatMoney(order.change_for)}` : ''}
         </Text>
       </Card>
+
+      {/* Desafio Apêndice C: Avaliação do pedido após a entrega */}
+      {order.status === 'delivered' ? (
+        <Card style={styles.card}>
+          <Text style={styles.cardTitle}>
+            {review ? 'Sua avaliação' : 'Avalie seu pedido'}
+          </Text>
+          {review ? (
+            <View style={styles.reviewContainer}>
+              <StarRating rating={review.rating} readOnly size={26} />
+              {review.comment ? (
+                <Text style={styles.reviewComment}>"{review.comment}"</Text>
+              ) : null}
+              <Text style={styles.reviewDate}>
+                Avaliado em {formatDateTime(review.created_at)}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.reviewForm}>
+              <Text style={styles.reviewSubtitle}>
+                Como foi a sua experiência com a compra e a entrega?
+              </Text>
+              <View style={styles.starPicker}>
+                <StarRating rating={rating} onRate={setRating} size={36} />
+              </View>
+              <Input
+                label="Comentário (opcional)"
+                placeholder="Conte o que achou dos produtos..."
+                value={comment}
+                onChangeText={setComment}
+                multiline
+              />
+              <Button
+                title="Enviar avaliação"
+                loading={createReview.isPending}
+                onPress={handleSendReview}
+              />
+            </View>
+          )}
+        </Card>
+      ) : null}
 
       {isActive(order.status) && nextStatus(order.status) ? (
         <View style={styles.demo}>
@@ -192,6 +262,21 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: 15, color: colors.text },
   strong: { fontSize: 18, fontWeight: '800', color: colors.text },
   detail: { fontSize: 15, color: colors.text, marginBottom: 4 },
+  reviewContainer: { gap: spacing.xs, paddingVertical: spacing.xs },
+  reviewComment: {
+    fontSize: 15,
+    fontStyle: 'italic',
+    color: colors.text,
+    marginTop: 4,
+  },
+  reviewDate: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  reviewForm: { gap: spacing.sm },
+  reviewSubtitle: { fontSize: 14, color: colors.muted },
+  starPicker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: spacing.sm,
+  },
   demo: { gap: spacing.sm, marginBottom: spacing.md },
   demoText: { fontSize: 13, color: colors.muted, textAlign: 'center' },
   gap: { marginBottom: spacing.sm },

@@ -3,8 +3,10 @@ import {
   advanceOrder,
   cancelOrder,
   createOrder,
+  createOrderReview,
   getLastAddress,
   getOrder,
+  getOrderReview,
   listOrders,
 } from '@/services/orders';
 import { isActive } from '@/utils/orders';
@@ -55,5 +57,35 @@ export function useCancelOrder() {
   return useMutation({
     mutationFn: (id: string) => cancelOrder(id),
     onSuccess: invalidate,
+  });
+}
+
+// Desafio Apêndice C: Hooks para avaliação do pedido
+export function useOrderReview(orderId: string | undefined) {
+  return useQuery({
+    queryKey: ['orders', 'review', orderId],
+    queryFn: () => getOrderReview(orderId as string),
+    enabled: Boolean(orderId),
+  });
+}
+
+export function useCreateOrderReview() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      orderId,
+      rating,
+      comment,
+    }: {
+      orderId: string;
+      rating: number;
+      comment?: string;
+    }) => createOrderReview(orderId, rating, comment),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['orders', 'review', variables.orderId],
+      });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
   });
 }

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { CreateOrderInput, Order } from '@/types';
+import type { CreateOrderInput, Order, OrderReview } from '@/types';
 
 // A ÚNICA forma de criar um pedido: a função create_order, no banco. Ela confere os
 // itens, calcula o total com os preços do banco e devolve o id do pedido.
@@ -65,4 +65,41 @@ export async function getLastAddress(): Promise<Pick<
 
   if (error) throw error;
   return data;
+}
+
+// Desafio Apêndice C: Avaliação do pedido após a entrega
+export async function getOrderReview(orderId: string): Promise<OrderReview | null> {
+  const { data, error } = await supabase
+    .from('order_reviews')
+    .select('*')
+    .eq('order_id', orderId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as OrderReview | null;
+}
+
+export async function createOrderReview(
+  orderId: string,
+  rating: number,
+  comment?: string,
+): Promise<OrderReview> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado');
+
+  const { data, error } = await supabase
+    .from('order_reviews')
+    .insert({
+      order_id: orderId,
+      user_id: user.id,
+      rating,
+      comment: comment?.trim() || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as OrderReview;
 }

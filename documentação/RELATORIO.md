@@ -173,5 +173,144 @@ refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => { ref
 
 A suíte completa de verificação da Etapa 14 (`pnpm run typecheck`, `pnpm test` e `pnpm run format`) passou a rodar com **100% de sucesso**.
 
+---
+
+### 6. Etapa 14.3: Erro no Login e Cadastro ("Invalid path specified in request URL")
+
+#### Descrição do Erro
+
+Durante o teste manual no celular (roteiro da Etapa 14.3), ao submeter o formulário de login ou cadastro, a interface exibia a seguinte mensagem em vermelho:
+
+```text
+Invalid path specified in request URL
+```
+
+Impossibilitando a criação de conta ou autenticação de usuários.
+
+#### Análise Técnica
+
+O erro originou-se na configuração da variável de ambiente `EXPO_PUBLIC_SUPABASE_URL` no arquivo `.env`. Em vez da URL base do projeto, foi copiado acidentalmente o endpoint da API REST:
+
+```text
+# Incorreto:
+EXPO_PUBLIC_SUPABASE_URL=https://<id>.supabase.co/rest/v1/
+```
+
+O cliente do Supabase (`@supabase/supabase-js`) espera apenas a URL raiz (`https://<id>.supabase.co`). Quando métodos de autenticação como `supabase.auth.signInWithPassword` ou `signUp` eram chamados, o cliente anexava o caminho do serviço de autenticação (`/auth/v1/...`) após a URL base, gerando uma URL malformada com duplo caminho:
+
+```text
+https://<id>.supabase.co/rest/v1/auth/v1/token
+```
+
+O API Gateway do Supabase não reconhece esse caminho e respondeu com `404 - Invalid path specified in request URL`.
+
+#### Como a Solução foi Implementada
+
+1. O arquivo `.env` foi corrigido removendo o sufixo `/rest/v1/`:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://xwkjusugsmpuukutqjcr.supabase.co
+```
+
+2. Foi orientado o reinício do servidor Expo com cache limpo:
+
+```bash
+npx expo start -c
+```
+
+#### Resultado
+
+Com a URL base correta, as requisições de autenticação passaram a ser enviadas para o endpoint correto (`/auth/v1/token`), restabelecendo o funcionamento do cadastro e do login.
 
 
+
+
+
+---
+
+### 7. Resolução de Dependências do Jest com pnpm (`@babel/runtime`) e Reinício Limpo do Expo
+
+#### Descrição do Erro
+
+Durante a reinstalação e limpeza das dependências com o gerenciador de pacotes `pnpm`, ao rodar os testes com `pnpm test`, o Jest falhou na inicialização dos testes com o seguinte erro de resolução de módulos:
+
+```text
+Cannot find module '@babel/runtime/helpers/interopRequireDefault'
+```
+
+Além disso, durante tentativas de remoção da pasta `node_modules`, o Windows retornava erro de permissão (`EPERM: operation not permitted`) devido a processos em segundo plano do Node.js (`expo start`) travando arquivos em cache.
+
+#### Análise Técnica
+
+O `pnpm` adota uma arquitetura de armazenamento global com links simbólicos (*symlinks*) e isolamento rígido de dependências transitivas. Enquanto o npm tradicional achata (*hoisting*) todas as subdependências na raiz do `node_modules`, o pnpm só disponibiliza na raiz os pacotes explicitamente declarados no `package.json`. O `babel-jest` necessita internamente do `@babel/runtime` para importar os *helpers* de compilação; ao não encontrá-lo como dependência direta, o módulo falhava em tempo de execução dos testes.
+
+#### Como a Solução foi Implementada
+
+1. Os processos órfãos do Node que bloqueavam os arquivos foram identificados e encerrados.
+2. O `@babel/runtime` foi adicionado como dependência de desenvolvimento no projeto via `pnpm`:
+   ```bash
+   pnpm add -D @babel/runtime
+   ```
+3. As dependências foram reinstaladas de forma limpa com `pnpm install`.
+4. O servidor de desenvolvimento do Expo foi iniciado com a flag de limpeza de cache:
+   ```bash
+   pnpm expo start -c
+   ```
+
+#### Resultado
+
+A suíte de testes passou a rodar com 100% de sucesso sem qualquer erro de resolução de dependências no Jest, e o servidor Metro passou a responder de forma estável na porta 8081.
+
+---
+
+### 8. Implementação dos Desafios de Evolução do Apêndice C (Nível Iniciante)
+
+Conforme os desafios propostos no Apêndice C do guia (Página 103), foram implementadas todas as funcionalidades de nível iniciante:
+
+#### 8.1. Desafio 1: Integração Contínua com GitHub Actions
+
+- **Arquivo:** `.github/workflows/ci.yml`
+- **Descrição:** Pipeline automatizada de CI que dispara a cada `push` ou `pull request` direcionado para a branch `main`.
+- **Etapas da Pipeline:**
+  1. Checkout do código fonte.
+  2. Instalação e configuração do `pnpm` v10.
+  3. Configuração do ambiente Node.js 22 com cache de dependências do pnpm.
+  4. Instalação determinística de dependências (`pnpm install --frozen-lockfile`).
+  5. Verificação estática de tipos (`pnpm run typecheck`).
+  6. Checagem de formatação de código (`pnpm run format -- --check`).
+  7. Execução de todos os testes unitários e de banco de dados (`pnpm test`).
+
+#### 8.2. Desafio 2: Avaliação do Pedido (1 a 5 Estrelas) após a Entrega
+
+- **Banco de Dados e RLS (`supabase/schema.sql`):**
+  - Criação da tabela `public.order_reviews` com campos: `id`, `order_id` (único, garantindo apenas uma avaliação por pedido), `user_id`, `rating` (inteiro de 1 a 5 com `check constraint`), `comment` e `created_at`.
+  - Habilitação de Row Level Security (RLS) com duas políticas restritas:
+    - Leitura: o usuário só pode consultar as avaliações dos seus próprios pedidos (`auth.uid() = user_id`).
+    - Inserção: o usuário só pode criar uma avaliação se for o dono do pedido e **se o pedido estiver estritamente com status `delivered`** (`status = 'delivered'`).
+- **Testes do Banco no PGlite (`supabase/tests/db.test.mjs`):**
+  - Adicionado novo bloco de teste unitário verificando que pedidos em status anterior (`received`) não aceitam avaliação, que outros usuários não conseguem avaliar pedidos alheios, que o dono avalia com sucesso após o status `delivered`, e que tentativas de avaliação duplicada são rejeitadas.
+  - A suíte de testes de banco subiu para **14 testes passando**.
+- **Tipagem TypeScript (`src/types/index.ts`):**
+  - Interfaces `OrderReview` e `CreateOrderReviewInput`.
+- **Serviços e Hooks TanStack Query (`src/services/orders.ts` e `src/hooks/useOrders.ts`):**
+  - Funções `getOrderReview` e `createOrderReview`.
+  - Hooks `useOrderReview` e `useCreateOrderReview` com invalidação de cache automática.
+- **Componente de Interface (`src/components/StarRating.tsx`):**
+  - Componente de estrelas interativo e acessível com suporte a seleção de 1 a 5 estrelas e modo somente leitura (`readOnly`).
+- **Tela de Detalhes do Pedido (`app/(app)/order/[id].tsx`):**
+  - Quando o pedido atinge o status de `delivered`, um cartão de avaliação é renderizado. Se o pedido ainda não foi avaliado, exibe o seletor de estrelas, campo de comentário opcional e botão "Enviar avaliação". Caso já tenha sido avaliado, exibe a nota e o comentário gravados.
+
+---
+
+### 9. Etapa 15: Documentação (README), Vitrine de Imagens e Build Android (APK)
+
+#### 9.1. README.md e Pasta de Imagens (`docs/`)
+
+- Foi criado o `README.md` na raiz e na pasta do projeto seguindo a estrutura completa do guia oficial (Código 66).
+- Criada a pasta `docs/` para inclusão das capturas de tela do app (`lojas.png`, `cardapio.png`, `carrinho.png`, `pedido.png`), com espaço reservado e tabela explicativa.
+
+#### 9.2. Configuração do EAS Build para Geração de APK Android (`eas.json`)
+
+- O perfil `preview` do arquivo `marketgo/eas.json` foi ajustado especificando:
+  - `"android": { "buildType": "apk" }`: Gera diretamente o arquivo `.apk` instalável no celular sem exigir publicação na Google Play Store.
+  - Variáveis de ambiente embarcadas: `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_KEY` configuradas no perfil, garantindo que a compilação em nuvem do EAS contenha a conexão ativa com o backend Supabase.

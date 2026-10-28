@@ -89,3 +89,19 @@ export interface CreateOrderInput {
   neighborhood: string;
   complement: string;
 }
+
+// ---- avaliações (Apêndice C) ----
+export interface OrderReview {
+  id: string;
+  order_id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface CreateOrderReviewInput {
+  orderId: string;
+  rating: number;
+  comment?: string;
+}

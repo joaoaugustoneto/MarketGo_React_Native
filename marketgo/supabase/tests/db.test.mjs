@@ -310,3 +310,67 @@ describe('privacidade e status', () => {
     );
   });
 });
+
+describe('avaliações de pedidos (Apêndice C)', () => {
+  it('só permite avaliar pedidos entregues do próprio usuário', async () => {
+    const arroz = await productId('Arroz branco 5 kg', M);
+    const id = await createOrder(ALICE, M, [{ product_id: arroz, quantity: 1 }]);
+
+    // Pedido ainda em 'received': Alice não consegue avaliar
+    await assert.rejects(
+      as(ALICE, () =>
+        db.query(
+          'insert into order_reviews (order_id, user_id, rating, comment) values ($1, $2, $3, $4)',
+          [id, ALICE, 5, 'Ótimo serviço!'],
+        ),
+      ),
+    );
+
+    // Avança até entregue
+    await advance(ALICE, id);
+    await advance(ALICE, id);
+    await advance(ALICE, id);
+
+    // Bob tenta avaliar pedido da Alice: deve falhar
+    await assert.rejects(
+      as(BOB, () =>
+        db.query(
+          'insert into order_reviews (order_id, user_id, rating, comment) values ($1, $2, $3, $4)',
+          [id, BOB, 5, 'Tentando avaliar pedido alheio'],
+        ),
+      ),
+    );
+
+    // Alice avalia com sucesso
+    await as(ALICE, () =>
+      db.query(
+        'insert into order_reviews (order_id, user_id, rating, comment) values ($1, $2, $3, $4)',
+        [id, ALICE, 5, 'Chegou rápido e perfeito!'],
+      ),
+    );
+
+    // Alice lê a própria avaliação
+    const reviews = await as(ALICE, () =>
+      rows('select rating, comment from order_reviews where order_id = $1', [id]),
+    );
+    assert.equal(reviews.length, 1);
+    assert.equal(reviews[0].rating, 5);
+    assert.equal(reviews[0].comment, 'Chegou rápido e perfeito!');
+
+    // Bob não consegue ver a avaliação da Alice
+    const bobReviews = await as(BOB, () =>
+      rows('select * from order_reviews where order_id = $1', [id]),
+    );
+    assert.equal(bobReviews.length, 0);
+
+    // Não pode avaliar o mesmo pedido duas vezes (unique)
+    await assert.rejects(
+      as(ALICE, () =>
+        db.query(
+          'insert into order_reviews (order_id, user_id, rating, comment) values ($1, $2, $3, $4)',
+          [id, ALICE, 4, 'Tentando duplicar'],
+        ),
+      ),
+    );
+  });
+});

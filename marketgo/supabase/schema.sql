@@ -270,3 +270,33 @@ grant execute on function
   public.create_order(uuid, jsonb, text, numeric, text, text, text, text) to authenticated;
 grant execute on function public.advance_order(uuid) to authenticated;
 grant execute on function public.cancel_order(uuid) to authenticated;
+-- 5) Desafio Apendice C: Avaliacao do pedido (1 a 5 estrelas) apos a entrega
+create table public.order_reviews (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null unique references public.orders (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  rating int not null check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz not null default now()
+);
+create index order_reviews_order_idx on public.order_reviews (order_id);
+
+alter table public.order_reviews enable row level security;
+
+create policy "Avaliacoes: ler as proprias"
+  on public.order_reviews for select to authenticated
+  using ((select auth.uid()) = user_id);
+
+create policy "Avaliacoes: criar para pedido entregue"
+  on public.order_reviews for insert to authenticated
+  with check (
+    (select auth.uid()) = user_id
+    and exists (
+      select 1 from public.orders o
+      where o.id = order_id
+        and o.user_id = (select auth.uid())
+        and o.status = 'delivered'
+    )
+  );
+
+grant select, insert on public.order_reviews to authenticated;

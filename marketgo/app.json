@@ -26,6 +26,16 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "c9670da2-f90a-497d-ac8a-14918df8a1c4"
+      }
     }
   }
 }

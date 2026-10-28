@@ -1,0 +1,44 @@
+name: CI - Verificações e Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Verificações e Testes (App e Banco)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: marketgo
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: marketgo/pnpm-lock.yaml
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Verificação estática de tipos (typecheck)
+        run: pnpm run typecheck
+
+      - name: Verificação de formatação (prettier)
+        run: pnpm run format -- --check
+
+      - name: Executar testes automatizados (Jest e PGlite)
+        run: pnpm test
