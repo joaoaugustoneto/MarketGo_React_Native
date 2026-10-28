@@ -53,5 +53,6 @@
       "/supabase/"
     ]
   },
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@10.26.1"
 }
