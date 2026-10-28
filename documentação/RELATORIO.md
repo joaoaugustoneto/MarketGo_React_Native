@@ -60,3 +60,60 @@ Após a implementação e salvamento do `package.json`, os comandos de teste pas
 
 - A execução de `npm run test:app` ignorou a pasta `/supabase/`, focando apenas nas lógicas do React Native, resultando em **37 testes passando**.
 - A execução de `npm run test:db` manteve seu funcionamento esperado, utilizando o Node para testar as regras de banco via PGlite, resultando em **13 testes passando**.
+
+---
+
+### 2. Etapa 8: Falha de Importação no StateViews (Nome Incorreto do Arquivo de Ícones)
+
+#### Descrição do Erro
+
+No início da Etapa 8 (Design system: componentes de interface), ao construir e compilar o componente `src/components/StateViews.tsx`, o arquivo não conseguia importar o utilitário de ícones a partir de `@/utils/icons`.
+
+**Análise Técnica:**
+O arquivo de ícones criado na Etapa 5 havia sido nomeado por engano com dois pontos antes da extensão (`icons..ts` / `icons..tsx`). Dessa forma, a resolução de módulos do TypeScript e do bundler não encontrava o arquivo esperado em `src/utils/icons.ts`, impedindo a importação correta de tipos como `IconName`.
+
+#### Como a Solução foi Implementada
+
+A correção foi realizada diretamente no sistema de arquivos através da renomeação do arquivo, retirando o ponto extra:
+- De: `src/utils/icons..ts`
+- Para: `src/utils/icons.ts`
+
+Essa correção foi versionada e registrada no commit `2a531b9` (*"feat: Etapa 8 - Concluída, Componentes feitos"*).
+
+#### Resultado
+
+Após a renomeação, o caminho `@/utils/icons` passou a ser resolvido normalmente pelo TypeScript e pelo ambiente Expo, permitindo que o `StateViews.tsx` e os demais componentes utilizassem os ícones e a tipagem sem erros.
+
+---
+
+### 3. Etapa 10: Incompatibilidade de Tipagem em `app/(app)/(tabs)/_layout.tsx` (`ColorValue` vs `Ionicons`)
+
+#### Descrição do Erro
+
+Durante a execução da verificação estática de tipos (`pnpm run typecheck`) na Etapa 10, o TypeScript acusou o seguinte erro em `app/(app)/(tabs)/_layout.tsx`:
+
+```text
+app/(app)/(tabs)/_layout.tsx(10,39): error TS2322: Type '____ColorValue_Internal' is not assignable to type 'string | NativeColorValue | undefined'.
+  Type 'null' is not assignable to type 'string | NativeColorValue | undefined'.
+```
+
+**Análise Técnica:**
+O guia especifica a assinatura da função auxiliar de ícones como `({ color, size }: { color: ColorValue; size: number })`. No entanto, no React Native 0.88, o tipo `ColorValue` admite `null` (via `____ColorValue_Internal`), enquanto o prop `color` do componente `<Ionicons />` do `@expo/vector-icons` aceita apenas `string | undefined`. Como a tipagem estrita do TypeScript (`strict: true`) impede a atribuição de um valor potencialmente `null` a uma propriedade que exige `string`, a compilação falhava.
+
+#### Como a Solução foi Implementada
+
+No arquivo `app/(app)/(tabs)/_layout.tsx`, manteve-se o parâmetro compatível com o Expo Router (`color: ColorValue`), convertendo com asserção de tipo segura ao repassar ao componente do ícone (`color as string`):
+
+```tsx
+function tabIcon(name: IconName) {
+  return ({ color, size }: { color: ColorValue; size: number }) => (
+    <Ionicons name={name} size={size} color={color as string} />
+  );
+}
+```
+
+#### Resultado
+
+A verificação de tipos (`pnpm run typecheck`) foi executada novamente e concluída com **código 0 e nenhum erro encontrado**.
+
+
