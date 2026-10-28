@@ -314,3 +314,40 @@ Conforme os desafios propostos no Apêndice C do guia (Página 103), foram imple
 - O perfil `preview` do arquivo `marketgo/eas.json` foi ajustado especificando:
   - `"android": { "buildType": "apk" }`: Gera diretamente o arquivo `.apk` instalável no celular sem exigir publicação na Google Play Store.
   - Variáveis de ambiente embarcadas: `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_KEY` configuradas no perfil, garantindo que a compilação em nuvem do EAS contenha a conexão ativa com o backend Supabase.
+
+---
+
+### 10. Etapa 15.3: Resolução de Falha no EAS Build (`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`)
+
+#### Descrição do Erro
+
+Durante a primeira execução do comando de build em nuvem para Android (`eas build --platform android --profile preview`), o EAS Build falhou na fase `INSTALL_DEPENDENCIES` com o seguinte erro:
+
+```text
+[ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION] 33 lockfile entries failed verification:
+  @electric-sql/pglite@0.5.13 was published at 2026-10-28T13:12:17.000Z, within the minimumReleaseAge cutoff
+  @expo/cli@58.1.17 was published at 2026-10-28T15:34:05.000Z, within the minimumReleaseAge cutoff
+  ...
+pnpm install --frozen-lockfile exited with non-zero code: 1
+```
+
+#### Análise Técnica
+
+O `pnpm` v10 possui uma política de segurança contra ataques de cadeia de suprimentos (*supply-chain security*) ativada por padrão chamada `minimumReleaseAge`. Essa política bloqueia a instalação de qualquer pacote ou dependência transitiva que tenha sido publicado no npm há menos de 24 horas (período de resfriamento). Como os pacotes `@electric-sql/pglite` e `@expo/cli` receberam atualizações no próprio dia, o comando `pnpm install --frozen-lockfile` nos servidores remotos do EAS interrompeu o build.
+
+#### Como a Solução foi Implementada
+
+1. Foi configurada a política de tolerância zero para o tempo de lançamento em `.npmrc` e `pnpm-workspace.yaml`:
+   ```ini
+   minimum-release-age=0
+   ```
+   ```yaml
+   minimumReleaseAge: 0
+   ```
+2. Declarado explicitamente o campo `"packageManager": "pnpm@10.26.1"` no `marketgo/package.json`.
+3. Fixada a versão do pnpm no perfil de build em `marketgo/eas.json` (`"pnpm": "10.26.1"`).
+4. Realizado novo disparo do EAS Build com a configuração corrigida.
+
+#### Resultado
+
+As dependências foram validadas e o processo de compilação do APK Android prosseguiu normalmente nos servidores do Expo.
