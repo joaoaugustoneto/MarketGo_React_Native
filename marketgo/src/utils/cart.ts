@@ -31,7 +31,7 @@ function withItem(cart: Cart, product: CartProduct, quantity: number): Cart {
   const total = clamp((existing?.quantity ?? 0) + quantity);
   if (total === 0)
     return { ...cart, items: cart.items.filter((i) => i.productId !== product.id) };
-  
+
   const item: CartItem = {
     productId: product.id,
     name: product.name,
@@ -39,7 +39,7 @@ function withItem(cart: Cart, product: CartProduct, quantity: number): Cart {
     price: product.price,
     quantity: total,
   };
-  
+
   return existing
     ? { ...cart, items: cart.items.map((i) => (i.productId === product.id ? item : i)) }
     : { ...cart, items: [...cart.items, item] };
@@ -107,7 +107,7 @@ export function missingForMinimum(cart: Cart): number | null {
 export function isValidCart(value: unknown): value is Cart {
   if (typeof value !== 'object' || value === null) return false;
   const c = value as Record<string, unknown>;
-  
+
   if (!(c.storeId === null || typeof c.storeId === 'string')) return false;
   if (
     typeof c.storeName !== 'string' ||
@@ -117,7 +117,7 @@ export function isValidCart(value: unknown): value is Cart {
     return false;
   }
   if (!Array.isArray(c.items)) return false;
-  
+
   return c.items.every((i) => {
     if (typeof i !== 'object' || i === null) return false;
     const item = i as Record<string, unknown>;
@@ -142,12 +142,12 @@ export function reorderCart(
 ): { cart: Cart; skipped: string[] } {
   let cart = newCart(store);
   const skipped: string[] = [];
-  
+
   for (const item of order.items ?? []) {
     const product = products.find((p) => p.id === item.product_id && p.is_active);
     if (!product) skipped.push(item.name);
     else cart = withItem(cart, product, item.quantity);
   }
-  
+
   return { cart: cart.items.length > 0 ? cart : EMPTY_CART, skipped };
 }

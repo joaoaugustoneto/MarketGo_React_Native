@@ -22,14 +22,14 @@ export function Input({ label, error, style, ...rest }: InputProps) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { 
-    marginBottom: spacing.md 
+  wrapper: {
+    marginBottom: spacing.md,
   },
-  label: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: colors.text, 
-    marginBottom: 6 
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
   },
   input: {
     minHeight: 52,
@@ -41,12 +41,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
-  inputError: { 
-    borderColor: colors.danger 
+  inputError: {
+    borderColor: colors.danger,
   },
-  error: { 
-    color: colors.danger, 
-    fontSize: 13, 
-    marginTop: 4 
+  error: {
+    color: colors.danger,
+    fontSize: 13,
+    marginTop: 4,
   },
 });

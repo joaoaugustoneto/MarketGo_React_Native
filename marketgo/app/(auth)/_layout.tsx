@@ -7,6 +7,6 @@ export default function AuthLayout() {
 
   if (loading) return <LoadingView />;
   if (session) return <Redirect href="/" />; // já logado: vai para o app
-  
+
   return <Stack screenOptions={{ headerShown: false }} />;
 }

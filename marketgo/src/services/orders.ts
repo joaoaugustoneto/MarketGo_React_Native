@@ -14,7 +14,7 @@ export async function createOrder(input: CreateOrderInput): Promise<string> {
     p_neighborhood: input.neighborhood,
     p_complement: input.complement,
   });
-  
+
   if (error) throw error;
   return data as string;
 }
@@ -35,7 +35,7 @@ export async function getOrder(id: string): Promise<Order> {
     .select('*, items:order_items(*)')
     .eq('id', id)
     .single();
-    
+
   if (error) throw error;
   return data as Order;
 }
@@ -62,7 +62,7 @@ export async function getLastAddress(): Promise<Pick<
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-    
+
   if (error) throw error;
   return data;
 }

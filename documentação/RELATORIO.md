@@ -116,4 +116,62 @@ function tabIcon(name: IconName) {
 
 A verificação de tipos (`pnpm run typecheck`) foi executada novamente e concluída com **código 0 e nenhum erro encontrado**.
 
+---
+
+### 4. Etapa 14: Falha no Script Prettier por Caminho Inexistente (`package.json`)
+
+#### Descrição do Erro
+
+Durante a execução das verificações automáticas de qualidade da Etapa 14.1 com o comando `pnpm run format`, o Prettier encerrou com erro:
+
+```text
+[error] No files matching the pattern were found: "tests".
+ ELIFECYCLE  Command failed with exit code 2.
+```
+
+**Análise Técnica:**
+O script `"format"` no `package.json` estava configurado como `"prettier --write app src tests supabase/tests"`. No entanto, a pasta de testes unitários do Jest no projeto é nomeada como `__tests__` (com dois underlines no início e fim). O Prettier, ao não encontrar nenhuma pasta chamada `tests`, interrompeu o processo com código de erro.
+
+#### Como a Solução foi Implementada
+
+O arquivo `package.json` foi ajustado no campo `scripts.format` para apontar corretamente para a pasta `__tests__`, exatamente como especificado no Código 1 do guia:
+
+```json
+"format": "prettier --write app src __tests__ supabase/tests"
+```
+
+#### Resultado
+
+O comando `pnpm run format` passou a executar perfeitamente, formatando todos os arquivos das pastas `app`, `src`, `__tests__` e `supabase/tests`.
+
+---
+
+### 5. Etapa 14: Incompatibilidade de Tipo no `RefreshControl` (`onRefresh={refetch}`)
+
+#### Descrição do Erro
+
+Na verificação estática com `pnpm run typecheck` da Etapa 14.1, foram apontados erros nas telas `app/(app)/(tabs)/index.tsx` e `app/(app)/(tabs)/orders.tsx`:
+
+```text
+error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: RefreshControlProps): RefreshControl', gave the following error.
+    Type '(options?: RefetchOptions | undefined) => Promise<QueryObserverResult<...>>' is not assignable to type '() => void | Promise<void>'.
+```
+
+**Análise Técnica:**
+A propriedade `onRefresh` do `RefreshControl` (React Native) exige um callback que devolva `void` ou `Promise<void>`. Contudo, o método `refetch` do TanStack Query v5 retorna uma `Promise<QueryObserverResult<TData, TError>>`. Pela checagem estrita de tipos do TypeScript, uma Promise que resolve um objeto complexo não é diretamente compatível com `Promise<void>`.
+
+#### Como a Solução foi Implementada
+
+Em `app/(app)/(tabs)/index.tsx` e `app/(app)/(tabs)/orders.tsx`, o callback foi envolvido em uma função anônima que descarta o valor de retorno da Promise, garantindo retorno `void`:
+
+```tsx
+refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => { refetch(); }} />}
+```
+
+#### Resultado
+
+A suíte completa de verificação da Etapa 14 (`pnpm run typecheck`, `pnpm test` e `pnpm run format`) passou a rodar com **100% de sucesso**.
+
+
 

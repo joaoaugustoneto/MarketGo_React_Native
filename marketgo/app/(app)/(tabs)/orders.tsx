@@ -55,7 +55,14 @@ export default function OrdersScreen() {
             <Text style={styles.total}>{formatMoney(item.total)}</Text>
           </Pressable>
         )}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => {
+              refetch();
+            }}
+          />
+        }
       />
     </Screen>
   );

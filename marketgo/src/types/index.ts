@@ -1,9 +1,5 @@
 export type StoreCategory =
-  | 'Mercado'
-  | 'Padaria'
-  | 'Farmácia'
-  | 'Restaurante'
-  | 'Hortifrúti';
+  'Mercado' | 'Padaria' | 'Farmácia' | 'Restaurante' | 'Hortifrúti';
 
 export interface Store {
   id: string;
@@ -33,11 +29,7 @@ export interface Product {
 export type PaymentMethod = 'pix' | 'card' | 'cash';
 
 export type OrderStatus =
-  | 'received'
-  | 'preparing'
-  | 'out_for_delivery'
-  | 'delivered'
-  | 'cancelled';
+  'received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
 
 export interface OrderItem {
   id: string;

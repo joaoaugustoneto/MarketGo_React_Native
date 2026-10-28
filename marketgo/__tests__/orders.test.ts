@@ -13,7 +13,7 @@ describe('timeline', () => {
   it('entregue deixa todas as etapas concluídas', () => {
     expect(timeline('delivered').every((s) => s.state === 'done')).toBe(true);
   });
-  
+
   it('cancelado não avança nenhuma etapa', () => {
     expect(timeline('cancelled').every((s) => s.state === 'pending')).toBe(true);
   });

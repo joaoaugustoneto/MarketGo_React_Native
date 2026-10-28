@@ -18,6 +18,6 @@ export const registerSchema = z
     message: 'As senhas não conferem',
     path: ['confirm'],
   });
-  
+
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;

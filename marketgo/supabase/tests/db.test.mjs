@@ -99,7 +99,7 @@ describe('leitura e permissões', () => {
     );
     await db.query('update products set is_active = true where id = $1', [pid]);
   });
-  
+
   it('o app não consegue inserir pedidos diretamente', async () => {
     const sid = await storeId(M);
     await assert.rejects(
@@ -115,7 +115,7 @@ describe('leitura e permissões', () => {
       /permission denied/,
     );
   });
-  
+
   it('visitante (anon) não executa as funções', async () => {
     await db.exec('set role anon');
     try {
@@ -165,7 +165,7 @@ describe('create_order', () => {
     );
     await db.query('update products set price = 5.25 where id = $1', [leite]);
   });
-  
+
   it('respeita o pedido mínimo da loja', async () => {
     const pao = await productId('Pão francês (6 un)', 'Padaria Pão Quente');
     await assert.rejects(
@@ -173,7 +173,7 @@ describe('create_order', () => {
       /O pedido mínimo desta loja é R\$ 10,00\./,
     );
   });
-  
+
   it('recusa loja fechada', async () => {
     const combo = await productId('Combo 20 peças', 'Sushi Sakura');
     await assert.rejects(
@@ -181,7 +181,7 @@ describe('create_order', () => {
       /A loja está fechada no momento\./,
     );
   });
-  
+
   it('recusa itens inválidos: outra loja, inativo, quantidade e repetidos', async () => {
     const leite = await productId('Leite integral 1 L', M);
     const pizza = await productId('Margherita', 'Pizzaria Forno a Lenha');
@@ -212,7 +212,7 @@ describe('create_order', () => {
     );
     await db.query('update products set is_active = true where id = $1', [leite]);
   });
-  
+
   it('valida carrinho vazio, login, endereço e pagamento', async () => {
     const arroz = await productId('Arroz branco 5 kg', M);
     const item = [{ product_id: arroz, quantity: 1 }];
@@ -227,7 +227,7 @@ describe('create_order', () => {
       /Forma de pagamento inválida\./,
     );
   });
-  
+
   it('troco: só vale em dinheiro e precisa cobrir o total', async () => {
     const arroz = await productId('Arroz branco 5 kg', M); // 29,90 + 5,90 = 35,80
     const item = [{ product_id: arroz, quantity: 1 }];
@@ -273,7 +273,7 @@ describe('privacidade e status', () => {
         .length > 0,
     );
   });
-  
+
   it('o pedido avança na ordem certa e para em entregue', async () => {
     const arroz = await productId('Arroz branco 5 kg', M);
     const id = await createOrder(ALICE, M, [{ product_id: arroz, quantity: 1 }]);
@@ -282,7 +282,7 @@ describe('privacidade e status', () => {
     assert.equal(await advance(ALICE, id), 'delivered');
     await assert.rejects(advance(ALICE, id), /Este pedido não pode avançar\./);
   });
-  
+
   it('outro usuário não avança nem cancela o pedido alheio', async () => {
     const arroz = await productId('Arroz branco 5 kg', M);
     const id = await createOrder(ALICE, M, [{ product_id: arroz, quantity: 1 }]);
@@ -292,7 +292,7 @@ describe('privacidade e status', () => {
       /Pedido não encontrado\./,
     );
   });
-  
+
   it('só cancela enquanto o pedido está recebido', async () => {
     const arroz = await productId('Arroz branco 5 kg', M);
     const a = await createOrder(ALICE, M, [{ product_id: arroz, quantity: 1 }]);

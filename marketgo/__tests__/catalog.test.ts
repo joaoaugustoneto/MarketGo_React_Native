@@ -63,7 +63,7 @@ describe('sortStores', () => {
 
 describe('groupProducts', () => {
   const p = (id: string, section: string) => ({ id, section }) as Product;
-  
+
   it('agrupa por seção mantendo a ordem da primeira aparição', () => {
     const groups = groupProducts([p('a', 'Pães'), p('b', 'Doces'), p('c', 'Pães')]);
     expect(groups.map((g) => g.title)).toEqual(['Pães', 'Doces']);

@@ -11,7 +11,7 @@ const valid = {
 
 describe('makeCheckoutSchema', () => {
   const schema = makeCheckoutSchema(46.3);
-  
+
   const errorsOf = (data: unknown) => {
     const r = schema.safeParse(data);
     return r.success

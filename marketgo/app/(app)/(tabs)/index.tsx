@@ -70,7 +70,14 @@ export default function StoresScreen() {
           <StoreCard store={item} onPress={() => router.push(`/store/${item.id}`)} />
         )}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => {
+              refetch();
+            }}
+          />
+        }
       />
     </Screen>
   );
