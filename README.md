@@ -6,20 +6,17 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ## Capturas de Tela
 
-<!-- Espaço reservado para as capturas de tela do aplicativo -->
-|  Lojas e Catálogo |  Cardápio e Itens |  Carrinho e Checkout |  Acompanhamento e Avaliação |
-| :---: | :---: | :---: | :---: |
-| ![Lojas](docs/lojas.png) | ![Cardápio](docs/cardapio.png) | ![Carrinho](docs/carrinho.png) | ![Acompanhamento](docs/pedido.png) |
+| Lojas e Catálogo | Carrinho de Compras | Acompanhamento (Em Andamento) |
+| :---: | :---: | :---: |
+| <img src="docs/lojas.png" width="250" alt="Lojas e Catálogo" /> | <img src="docs/carrinho.png" width="250" alt="Carrinho de Compras" /> | <img src="docs/pedido.png" width="250" alt="Acompanhamento do Pedido" /> |
 
-> **Nota:** As imagens do aplicativo em funcionamento devem ser salvas na pasta [`docs/`](file:///docs/) com os nomes:
-> - `docs/lojas.png`
-> - `docs/cardapio.png`
-> - `docs/carrinho.png`
-> - `docs/pedido.png`
+| Pedido Entregue (Linha do Tempo) | Avaliação por Estrelas (Apêndice C) |
+| :---: | :---: |
+| <img src="docs/pedido-entregue.png" width="250" alt="Pedido Entregue" /> | <img src="docs/avaliacao.png" width="250" alt="Avaliação por Estrelas" /> |
 
 ---
 
-##  Funcionalidades
+## Funcionalidades
 
 - **Autenticação Segura:** Cadastro, login e sessão persistente gerenciados pelo Supabase Auth.
 - **Catálogo Inteligente:** Lista de lojas com busca em tempo real, filtro rápido por categoria (chips) e indicador visual de loja aberta/fechada.
@@ -29,12 +26,12 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 - **Segurança Transacional no Banco:** Pedido criado atomicamente via RPC (`create_order`) no PostgreSQL, garantindo cálculo de totais com preços autoritativos do servidor.
 - **Acompanhamento em Tempo Real:** Linha do tempo visual do status do pedido com polling adaptativo e modo de demonstração.
 - **Histórico e Reordenação:** Consulta de pedidos anteriores e botão "Pedir novamente" que reconstrói o carrinho validando itens disponíveis.
-- **⭐ Avaliação de Pedido (Apêndice C):** Sistema de avaliação por estrelas (1 a 5 estrelas) com comentário opcional, protegido por RLS e permitido exclusivamente após a entrega do pedido.
+- **Avaliação de Pedido (Apêndice C):** Sistema de avaliação por estrelas (1 a 5 estrelas) com comentário opcional, protegido por RLS e permitido exclusivamente após a entrega do pedido.
 - **Isolamento de Dados (RLS):** Row Level Security estrito no Postgres garantindo que nenhum usuário visualize ou altere pedidos alheios.
 
 ---
 
-##  Tecnologias
+## Tecnologias
 
 - **Mobile Framework:** [React Native](https://reactnative.dev/) com [Expo](https://expo.dev/) (SDK 52)
 - **Navegação:** [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing)
@@ -48,7 +45,7 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ---
 
-##  Como Executar
+## Como Executar
 
 ### Pré-requisitos
 - Node.js 20+ ou 22+
@@ -57,7 +54,7 @@ Aplicativo mobile de compras com entrega desenvolvido em React Native e Expo: o 
 
 ### 1. Clonar e Instalar Dependências
 ```bash
-git clone https://github.com/SEU-USUARIO/marketgo.git
+git clone https://github.com/joaoaugustoneto/MarketGo_React_Native.git
 cd MarketGo_React_Native/marketgo
 pnpm install
 ```
@@ -84,13 +81,13 @@ Escaneie o QR Code exibido no terminal utilizando o aplicativo **Expo Go** no An
 
 ---
 
-##  Segurança em Uma Linha
+## Segurança em Uma Linha
 
 > O app **não possui permissão direta de escrita** nas tabelas `orders` e `order_items`: não existe política de `insert`, `update` ou `delete` aberta para o cliente. Toda escrita ocorre por funções transacionais seguras (`create_order`, `advance_order`, `cancel_order`) que validam regras de negócio, calculam totais com preços do banco e controlam a máquina de estados do status. Além disso, a tabela de avaliações (`order_reviews`) valida via RLS que apenas o dono do pedido pode avaliá-lo e somente se o pedido estiver com status `delivered`.
 
 ---
 
-## 🧪 Testes Automatizados (51 Testes)
+## Testes Automatizados (51 Testes)
 
 | Comando | O que é testado | Cobertura |
 | :--- | :--- | :--- |
@@ -104,7 +101,7 @@ O teste de banco utiliza o **PGlite** (motor WebAssembly do Postgres real execut
 
 ---
 
-## 🔄 CI / Integração Contínua (GitHub Actions)
+## CI / Integração Contínua (GitHub Actions)
 
 O repositório possui uma pipeline de Integração Contínua automatizada em [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml):
 - Executa a cada `push` e `pull request` para a branch `main`.
@@ -115,7 +112,7 @@ O repositório possui uma pipeline de Integração Contínua automatizada em [`.
 
 ---
 
-## 📦 Build para Android (APK Independente)
+## Build para Android (APK Independente)
 
 O projeto está configurado para gerar um executável Android (`.apk`) via Expo Application Services (EAS Build), permitindo instalação direta no smartphone sem depender do Expo Go:
 
@@ -133,7 +130,7 @@ eas build --platform android --profile preview
 
 ---
 
-## 📂 Estrutura de Arquivos
+## Estrutura de Arquivos
 
 ```
 marketgo/
@@ -166,6 +163,9 @@ marketgo/
 
 ---
 
-## 👨‍💻 Autor
+## Autor
 
-Desenvolvido por **João** no curso de Programação para Dispositivos Móveis (IESB).
+Desenvolvido por **João Augusto Neto** no curso de Programação para Dispositivos Móveis (IESB).
+
+- **GitHub:** [joaoaugustoneto](https://github.com/joaoaugustoneto)
+- **Repositório:** [MarketGo_React_Native](https://github.com/joaoaugustoneto/MarketGo_React_Native)
