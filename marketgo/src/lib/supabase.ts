@@ -15,7 +15,9 @@ if (!rawUrl || !rawKey) {
 // Higienização defensiva: remove espaços, corrige eventuais "hhttps://" e remove sufixos acidentais como "/rest/v1"
 const url = rawUrl
   .trim()
-  .replace(/^h+ttps?:\/\//i, (m) => (m.toLowerCase().includes('http:') ? 'http://' : 'https://'))
+  .replace(/^h+ttps?:\/\//i, (m: string) =>
+    m.toLowerCase().includes('http:') ? 'http://' : 'https://',
+  )
   .replace(/\/rest\/v1\/?$/i, '')
   .replace(/\/+$/, '');
 

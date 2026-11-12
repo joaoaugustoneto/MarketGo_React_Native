@@ -392,3 +392,39 @@ Além disso, o Metro Bundler foi alocado na porta alternativa `8082` devido à p
 #### Resultado
 
 O cliente Supabase inicializa com sucesso tanto no ambiente mobile quanto no ambiente Web sem erros de validação de URL.
+
+---
+
+### 12. Falha no GitHub Actions CI por Tipo Implícito (`TS7006: Parameter 'm' implicitly has an 'any' type`)
+
+#### Descrição do Erro
+
+Durante a execução da pipeline de Integração Contínua no GitHub Actions (`ci.yml`), a etapa de **Verificação estática de tipos (typecheck)** falhou com o seguinte erro:
+
+```text
+Error: src/lib/supabase.ts(18,31): error TS7006: Parameter 'm' implicitly has an 'any' type.
+ELIFECYCLE Command failed with exit code 2.
+Error: Process completed with exit code 2.
+```
+
+#### Análise Técnica
+
+Na função de higienização de URL em `src/lib/supabase.ts`, o callback do método `.replace(/^h+ttps?:\/\//i, (m) => ...)` utilizava o parâmetro `m` sem anotação explícita de tipo. Sob as regras do compilador TypeScript em modo estrito (`strict: true` / `noImplicitAny: true`) configuradas no projeto, parâmetros de funções anônimas não tipados disparam o erro `TS7006`.
+
+#### Como a Solução foi Implementada
+
+O parâmetro `m` recebeu a tipagem explícita de `string` no arquivo `src/lib/supabase.ts`:
+
+```ts
+const url = rawUrl
+  .trim()
+  .replace(/^h+ttps?:\/\//i, (m: string) =>
+    m.toLowerCase().includes('http:') ? 'http://' : 'https://',
+  )
+  .replace(/\/rest\/v1\/?$/i, '')
+  .replace(/\/+$/, '');
+```
+
+#### Resultado
+
+A verificação estática de tipos (`pnpm run typecheck`), a checagem de formatação (`pnpm run format -- --check`) e todos os 51 testes automatizados (`pnpm test`) foram executados com **código 0 e sucesso total**.
