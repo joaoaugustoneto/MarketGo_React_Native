@@ -38,7 +38,7 @@ jobs:
         run: pnpm run typecheck
 
       - name: Verificação de formatação (prettier)
-        run: pnpm run format -- --check
+        run: pnpm run format:check
 
       - name: Executar testes automatizados (Jest e PGlite)
         run: pnpm test
